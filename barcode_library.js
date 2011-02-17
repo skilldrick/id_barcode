@@ -2,7 +2,7 @@
   $.writeln(text);
 }
 
-var Barcode = (function () {
+var Barcode = function () {
   var barcode_string;
   var stripped;
 
@@ -10,14 +10,20 @@ var Barcode = (function () {
     init: function (str) {
       barcode_string = str;
       stripped = this.strip();
+      if ( !this.checkCheckDigit() ) {
+        throw "Check digit incorrect";
+      }
       return this;
     },
+
     strip: function () {
       return barcode_string.replace(/-/g, '');
     },
+
     getCheckDigit: function () {
       return parseInt(stripped[12], 10);
     },
+
     checkCheckDigit: function () {
       var total = 0;
       for (var i = 0; i < stripped.length - 1; i++) { //-1 because we don't include check digit
@@ -32,4 +38,4 @@ var Barcode = (function () {
       return (checkDigit === this.getCheckDigit());
     }
   }
-})();
+};

@@ -1,5 +1,5 @@
 #strict on
-#target indesign
+/*#target indesign*/
 #include 'barcode_library.js'
 
 var tests = {
@@ -14,22 +14,22 @@ var tests = {
   },
 
   'test strip barcode': function () {
-    var stripped = Barcode.init(this.barcode_strings[0]).strip();
+    var stripped = Barcode().init(this.barcode_strings[0]).strip();
     assert('Barcode should match', stripped === '9781906230166');
   },
 
   'test checkCheckDigit': function () {
     for (var i = 0; i < this.barcode_strings.length; i++) {
-      var checkDigitCorrect = Barcode.init(this.barcode_strings[i]).checkCheckDigit();
+      var checkDigitCorrect = Barcode().init(this.barcode_strings[i]).checkCheckDigit();
       assert('Check digit should be correct', checkDigitCorrect);
     }
   },
 
   'test incorrect check digit': function () {
-    var checkDigitCorrect = Barcode.init('978-1-906230-16-3').checkCheckDigit();
-    assert('Check digit should be incorrect', !checkDigitCorrect);
+    assert_throws('init should throw', function () {
+      Barcode().init('978-1-906230-16-3');
+    });
   }
-    
 }
 
 
@@ -37,6 +37,18 @@ function assert(msg, success) {
   if (! success) {
     throw msg;
   }
+}
+
+function assert_throws(msg, func) {
+  var success = true;
+  try {
+    func();
+    success = false;
+  }
+  catch (e) {
+  }
+
+  assert(msg, success);
 }
 
 for (var test in tests) {
