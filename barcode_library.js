@@ -36,6 +36,16 @@ var Barcode = function () {
       }
       var checkDigit = 10 - (total % 10);
       return (checkDigit === this.getCheckDigit());
+    },
+
+    getBarWidths: function () {
+      var barWidths = [];
+      for (var i = 1; i < stripped.length; i++) { //don't include first number of barcode
+        var encoding = pattern[i - 1];
+        var thisBarWidth = bar_widths[encoding][stripped[i]];
+        barWidths.push(thisBarWidth);
+      }
+      return barWidths;
     }
   }
 };

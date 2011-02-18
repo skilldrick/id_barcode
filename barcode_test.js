@@ -6,7 +6,7 @@ var tests = {
   setup: function () {
     this.barcode_strings = [];
     this.barcode_strings.push('978-1-906230-16-6');
-    this.barcode_strings.push('978-0-300-13878-8');
+    this.barcode_strings.push('978-0-7858-2744-3');
   },
 
   'test logger': function () {
@@ -29,7 +29,29 @@ var tests = {
     assert_throws('init should throw', function () {
       Barcode().init('978-1-906230-16-3');
     });
+  },
+
+  'test bar widths': function () {
+    var correctBarWidths = [
+      [0, 1, 1, 1, 0, 1, 1], //L: 7
+      [0, 0, 0, 1, 0, 0, 1], //G: 8
+      [0, 1, 1, 0, 0, 1, 1], //G: 1
+      [0, 0, 0, 1, 0, 1, 1], //L: 9
+      [0, 1, 0, 0, 1, 1, 1], //G: 0
+      [0, 1, 0, 1, 1, 1, 1], //L: 6
+      [1, 1, 0, 1, 1, 0, 0], //R: 2
+      [1, 0, 0, 0, 0, 1, 0], //R: 3
+      [1, 1, 1, 0, 0, 1, 0], //R: 0
+      [1, 1, 0, 0, 1, 1, 0], //R: 1
+      [1, 0, 1, 0, 0, 0, 0], //R: 6
+      [1, 0, 1, 0, 0, 0, 0]  //R: 6
+    ];
+
+    var actualBarWidths = Barcode().init(this.barcode_strings[0]).getBarWidths();
+    assert_equal(correctBarWidths, actualBarWidths);
   }
+
+
 }
 
 
@@ -37,6 +59,20 @@ function assert(msg, success) {
   if (! success) {
     throw msg;
   }
+}
+
+function assert_equal(expected, actual) {
+  if (expected.constructor.toString().indexOf('Array') !== -1) {
+    //ugly hack for comparing arrays - would be better to recursively search
+    expected = expected.toString();
+    actual = actual.toString();
+  }
+  var errorMessage = expected.toString() + " expected, but was " + actual.toString();
+  assert(errorMessage, expected === actual);
+}
+
+function compare_arrays(first, second) {
+
 }
 
 function assert_throws(msg, func) {
