@@ -6,6 +6,24 @@ var Barcode = function () {
   var barcode_string;
   var stripped;
 
+  function getNorm(bars) {
+    var curr = bars[0];
+    var counter = 1;
+    var norm = [];
+    for (var i = 1; i < bars.length; i++) {
+      if (curr !== bars[i]) {
+        norm.push(counter);
+        counter = 1;
+        curr = bars[i];
+      }
+      else {
+        counter++;
+      }
+    }
+    norm.push(counter);
+    return norm;
+  }
+
   return {
     init: function (str) {
       barcode_string = str;
@@ -46,7 +64,28 @@ var Barcode = function () {
         barWidths.push(thisBarWidth);
       }
       return barWidths;
+    },
+
+    getNormalisedWidths: function () {
+      var barWidths = this.getBarWidths();
+      var normalisedWidths = [];
+      var current = [];
+      for (var i = 0; i < barWidths.length; i++) {
+        current = [];
+        if (barWidths[i][0] === 0) {
+          current.push([0, 1, 0, 1]);
+        }
+        else {
+          current.push([1, 0, 1, 0]);
+        }
+        var norm = getNorm(barWidths[i]);
+        current.push(norm);
+        normalisedWidths.push(current);
+      }
+      return normalisedWidths;
+
     }
+
   }
 };
 

@@ -49,8 +49,27 @@ var tests = {
 
     var actualBarWidths = Barcode().init(this.barcode_strings[0]).getBarWidths();
     assert_equal(correctBarWidths, actualBarWidths);
-  }
+  },
 
+  'test normalised widths': function () {
+    var correctNormalisedWidths = [
+      [[0, 1, 0, 1], [1, 3, 1, 2]],
+      [[0, 1, 0, 1], [3, 1, 2, 1]],
+      [[0, 1, 0, 1], [1, 2, 2, 2]],
+      [[0, 1, 0, 1], [3, 1, 1, 2]],
+      [[0, 1, 0, 1], [1, 1, 2, 3]],
+      [[0, 1, 0, 1], [1, 1, 1, 4]],
+      [[1, 0, 1, 0], [2, 1, 2, 2]],
+      [[1, 0, 1, 0], [1, 4, 1, 1]],
+      [[1, 0, 1, 0], [3, 2, 1, 1]],
+      [[1, 0, 1, 0], [2, 2, 2, 1]],
+      [[1, 0, 1, 0], [1, 1, 1, 4]],
+      [[1, 0, 1, 0], [1, 1, 1, 4]]
+    ];
+      
+    var actualNormalisedWidths = Barcode().init(this.barcode_strings[0]).getNormalisedWidths();
+    assert_equal(correctNormalisedWidths, actualNormalisedWidths);
+  }
 
 }
 
