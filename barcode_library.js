@@ -35,7 +35,7 @@ var Barcode = function () {
     },
 
     strip: function () {
-      return barcode_string.replace(/-/g, '');
+      return barcode_string.replace(/[^\d]+/g, '');
     },
 
     getCheckDigit: function () {

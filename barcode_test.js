@@ -5,7 +5,7 @@
 var tests = {
   setup: function () {
     this.barcode_strings = [];
-    this.barcode_strings.push('978-1-906230-16-6');
+    this.barcode_strings.push('978-1-906230-16-6\n');
     this.barcode_strings.push('978-0-7858-2744-3');
   },
 
