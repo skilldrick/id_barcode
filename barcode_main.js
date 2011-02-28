@@ -21,6 +21,7 @@ function showDialog() {
 var BarcodeDrawer = (function () {
   var doc;
   var page;
+  var layer;
   var scale;
   var height;
   var guardHeight;
@@ -91,10 +92,17 @@ var BarcodeDrawer = (function () {
     var pattern = null;
     var widths = null;
     var width = null;
+    var digit = null;
+
+    drawChar(hpos - 10, '9'); //initial '9'
 
     for (var i = 0; i < barWidths.length; i++) {
       pattern = barWidths[i][0];
       widths = barWidths[i][1];
+      digit = barWidths[i][2];
+
+      drawChar(hpos, digit);
+
       for (var j = 0; j < 4; j++) {
         width = widths[j];
         if (pattern[j] === 1) {
@@ -108,25 +116,55 @@ var BarcodeDrawer = (function () {
     }
   }
 
+  function drawText(x, y, boxWidth, boxHeight, text, font, align, fontSize) {
+    x *= scale;
+    y *= scale;
+    boxWidth *= scale;
+    boxHeight *= scale;
+    var textBox = page.textFrames.add();
+    textBox.contents = text;
+    var textStyle = textBox.textStyleRanges[0];
+    textStyle.appliedFont = font;
+    textStyle.pointSize = fontSize;
+    textStyle.justification = align;
+    textBox.geometricBounds = [y, x, y + boxHeight, x + boxWidth];
+  }
+
+  function drawChar(x, character) {
+    var y = vOffset + height + 1;
+    var boxWidth = 7;
+    var boxHeight = 9;
+    drawText(x, y, boxWidth, boxHeight, character, 'OCR-B 10 BT', Justification.CENTER_ALIGN, 9);
+  }
+
   function init() {
     scale = 0.3;
     height = 70;
     guardHeight = 75;
     reduce = 0.3;
-    hpos = 0;
-    vOffset = 0;
+    hpos = 15;
+    vOffset = 15;
     doc = getCurrentOrNewDocument();
     page = app.activeWindow.activePage;
     var viewPrefs = doc.viewPreferences;
     viewPrefs.horizontalMeasurementUnits = MeasurementUnits.millimeters;
     viewPrefs.verticalMeasurementUnits = MeasurementUnits.millimeters;
+    layer = doc.layers.item('barcode');
+    if (layer.isValid) {
+      layer.remove();
+    }
+    doc.layers.add({name: 'barcode'});
+    layer = doc.layers.item('barcode');
   }
 
-  function drawBarcode(barWidths) {
+  function drawBarcode(barWidths, isbn) {
     init();
+    drawText(hpos, vOffset - 10, 100, 9,
+      "ISBN: " + isbn, 'Helvetica Neue LT Std\t55 Roman', Justification.LEFT_ALIGN, 7);
     startGuards();
     drawMain(barWidths);
     endGuards();
+    page.groups.add(layer.allPageItems);
   }
 
   return {
@@ -138,6 +176,6 @@ var BarcodeDrawer = (function () {
 var isbn = showDialog();
 if (isbn) {
   var barWidths = Barcode().init(isbn).getNormalisedWidths();
-  BarcodeDrawer.drawBarcode(barWidths);
+  BarcodeDrawer.drawBarcode(barWidths, isbn);
 }
 

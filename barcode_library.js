@@ -80,6 +80,7 @@ var Barcode = function () {
         }
         var norm = getNorm(barWidths[i]);
         current.push(norm);
+        current.push(stripped[i+1]); //add isbn digit
         normalisedWidths.push(current);
       }
       return normalisedWidths;
