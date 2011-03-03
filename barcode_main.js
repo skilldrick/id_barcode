@@ -1,17 +1,28 @@
 ﻿#include 'barcode_library.js'
+#include 'dropdown.js'
 
 
 function showDialog() {
-  var dialog = app.dialogs.add({name: "New barcode", canCancel: true});
-  var leftCol = dialog.dialogColumns.add();
-  var rightCol = dialog.dialogColumns.add();
-  var label = leftCol.staticTexts.add({staticLabel: "ISBN:"});
-  var editbox = rightCol.textEditboxes.add();
-  editbox.minWidth = 200;
-  editbox.editContents = '978-1-906230-16-6';
+  var dialog = new Window('dialog', 'New barcode');
+  dialog.orientation = 'column';
+  var input = dialog.add('group');
+  input.add('statictext', undefined, 'ISBN:');
+  var edittext = input.add('edittext');
+  edittext.characters = 20;
+  edittext.text = '978-1-906230-16-6';
 
-  if (dialog.show()) {
-    return editbox.editContents;
+  /*
+  var fontRow = dialog.add('group');
+  var fontSelect = FontSelect(fontRow);
+  */
+  
+  var buttonGroup = dialog.add('group');
+  buttonGroup.orientation = 'row';
+  buttonGroup.add('button', undefined, 'OK', {name: 'ok'});
+  buttonGroup.add('button', undefined, 'Cancel', {name: 'cancel'});
+
+  if (dialog.show() === 1) {
+    return edittext.text;
   }
   else {
     return false;
