@@ -13,7 +13,8 @@ function showDialog() {
   input.add('statictext', undefined, 'ISBN:');
   var edittext = input.add('edittext');
   edittext.characters = 20;
-  edittext.text = '978-1-906230-16-6';
+  edittext.active = true;
+  //edittext.text = '978-1-906230-16-6';
 
   var isbnFontRow = dialog.add('group');
   var isbnFontSelect = FontSelect(isbnFontRow, defaultIsbnFont);
