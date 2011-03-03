@@ -1,20 +1,24 @@
 ﻿#include 'barcode_library.js'
 #include 'dropdown.js'
 
+var defaultIsbnFont = "Helvetica Neue LT Std\t55 Roman";
+var defaultCodeFont = "OCR-B 10 BT\tRegular";
+
 
 function showDialog() {
   var dialog = new Window('dialog', 'New barcode');
   dialog.orientation = 'column';
+  dialog.alignChildren = 'left';
   var input = dialog.add('group');
   input.add('statictext', undefined, 'ISBN:');
   var edittext = input.add('edittext');
   edittext.characters = 20;
   edittext.text = '978-1-906230-16-6';
 
-  /*
-  var fontRow = dialog.add('group');
-  var fontSelect = FontSelect(fontRow);
-  */
+  var isbnFontRow = dialog.add('group');
+  var isbnFontSelect = FontSelect(isbnFontRow, defaultIsbnFont);
+  var codeFontRow = dialog.add('group');
+  var codeFontSelect = FontSelect(codeFontRow, defaultCodeFont);
   
   var buttonGroup = dialog.add('group');
   buttonGroup.orientation = 'row';
@@ -22,7 +26,11 @@ function showDialog() {
   buttonGroup.add('button', undefined, 'Cancel', {name: 'cancel'});
 
   if (dialog.show() === 1) {
-    return edittext.text;
+    return {
+      isbn: edittext.text,
+      isbnFont: isbnFontSelect.getFont(),
+      codeFont: codeFontSelect.getFont()
+    }
   }
   else {
     return false;
@@ -50,14 +58,14 @@ var BarcodeDrawer = (function () {
     pathPoints[1].anchor = [x2, y2];
   }
 
-  function drawBox(x, y, width, height) {
+  function drawBox(x, y, width, height, colour) {
     x *= scale;
     y *= scale;
     width *= scale
     height *= scale;
     var rect = page.rectangles.add();
     rect.strokeWeight = 0;
-    rect.fillColor = "Black";
+    rect.fillColor = colour || "Black";
     rect.geometricBounds = [y, x, y + height, x + width];
   }
 
@@ -99,20 +107,20 @@ var BarcodeDrawer = (function () {
     hpos += 2;
   }
 
-  function drawMain(barWidths) {
+  function drawMain(barWidths, font) {
     var pattern = null;
     var widths = null;
     var width = null;
     var digit = null;
 
-    drawChar(hpos - 10, '9'); //initial '9'
+    drawChar(hpos - 10, '9', font); //initial '9'
 
     for (var i = 0; i < barWidths.length; i++) {
       pattern = barWidths[i][0];
       widths = barWidths[i][1];
       digit = barWidths[i][2];
 
-      drawChar(hpos, digit);
+      drawChar(hpos, digit, font);
 
       for (var j = 0; j < 4; j++) {
         width = widths[j];
@@ -127,7 +135,8 @@ var BarcodeDrawer = (function () {
     }
   }
 
-  function drawText(x, y, boxWidth, boxHeight, text, font, align, fontSize) {
+  function drawText(x, y, boxWidth, boxHeight, text, font, align) {
+    var fontSize = 12; //this is just a starting point
     x *= scale;
     y *= scale;
     boxWidth *= scale;
@@ -139,13 +148,24 @@ var BarcodeDrawer = (function () {
     textStyle.pointSize = fontSize;
     textStyle.justification = align;
     textBox.geometricBounds = [y, x, y + boxHeight, x + boxWidth];
+    var safetyCounter = 0;
+
+    //Keep reducing fontsize until no more overset text
+    while (textBox.overflows && safetyCounter < 100) {
+      textStyle.pointSize -= 0.5;
+      safetyCounter++;
+    }
   }
 
-  function drawChar(x, character) {
+  function drawChar(x, character, font) {
     var y = vOffset + height + 1;
     var boxWidth = 7;
     var boxHeight = 9;
-    drawText(x, y, boxWidth, boxHeight, character, 'OCR-B 10 BT', Justification.CENTER_ALIGN, 9);
+    drawText(x, y, boxWidth, boxHeight, character, font, Justification.LEFT_ALIGN);
+  }
+
+  function drawWhiteBox() {
+    drawBox(hpos - 10, vOffset - 15, 112, 100, 'Paper');
   }
 
   function init() {
@@ -153,8 +173,8 @@ var BarcodeDrawer = (function () {
     height = 70;
     guardHeight = 75;
     reduce = 0.3;
-    hpos = 15;
-    vOffset = 15;
+    hpos = 50;
+    vOffset = 50;
     doc = getCurrentOrNewDocument();
     page = app.activeWindow.activePage;
     var viewPrefs = doc.viewPreferences;
@@ -168,12 +188,13 @@ var BarcodeDrawer = (function () {
     layer = doc.layers.item('barcode');
   }
 
-  function drawBarcode(barWidths, isbn) {
+  function drawBarcode(barWidths, spec) {
     init();
-    drawText(hpos, vOffset - 10, 100, 9,
-      "ISBN: " + isbn, 'Helvetica Neue LT Std\t55 Roman', Justification.LEFT_ALIGN, 7);
+    drawWhiteBox();
+    drawText(hpos, vOffset - 10, 98, 9,
+      "ISBN: " + spec.isbn, spec.isbnFont, Justification.LEFT_ALIGN);
     startGuards();
-    drawMain(barWidths);
+    drawMain(barWidths, spec.codeFont);
     endGuards();
     page.groups.add(layer.allPageItems);
   }
@@ -184,9 +205,9 @@ var BarcodeDrawer = (function () {
 })();
 
 
-var isbn = showDialog();
-if (isbn) {
-  var barWidths = Barcode().init(isbn).getNormalisedWidths();
-  BarcodeDrawer.drawBarcode(barWidths, isbn);
+var result = showDialog();
+if (result) {
+  var barWidths = Barcode().init(result.isbn).getNormalisedWidths();
+  BarcodeDrawer.drawBarcode(barWidths, result);
 }
 
