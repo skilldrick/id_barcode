@@ -16,8 +16,10 @@ function showDialog() {
   edittext.active = true;
   //edittext.text = '978-1-906230-16-6';
 
+  dialog.add('statictext', undefined, 'ISBN font:');
   var isbnFontRow = dialog.add('group');
   var isbnFontSelect = FontSelect(isbnFontRow, defaultIsbnFont);
+  dialog.add('statictext', undefined, 'Barcode font:');
   var codeFontRow = dialog.add('group');
   var codeFontSelect = FontSelect(codeFontRow, defaultCodeFont);
   
