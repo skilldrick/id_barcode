@@ -217,7 +217,7 @@ function FontSelect(group, font) {
 
 
 var defaultIsbnFont = "Helvetica Neue LT Std\t55 Roman";
-var defaultCodeFont = "OCR-B 10 BT\tRegular";
+var defaultCodeFont = "OCR B Std\tRegular";
 
 
 function showDialog() {
