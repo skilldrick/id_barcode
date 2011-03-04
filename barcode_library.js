@@ -39,17 +39,21 @@ var Barcode = function () {
     },
 
     getCheckDigit: function () {
-      return parseInt(stripped[12], 10);
+      return this.getDigit(12);
+    },
+
+    getDigit: function (digit) {
+      return parseInt(stripped[digit], 10);
     },
 
     checkCheckDigit: function () {
       var total = 0;
       for (var i = 0; i < stripped.length - 1; i++) { //-1 because we don't include check digit
         if (i % 2 === 0) {
-          total += parseInt(stripped[i], 10);
+          total += this.getDigit(i);
         }
         else {
-          total += parseInt(stripped[i], 10) * 3;
+          total += this.getDigit(i) * 3;
         }
       }
       var checkDigit = 10 - (total % 10);
