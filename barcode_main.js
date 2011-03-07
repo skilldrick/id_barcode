@@ -213,7 +213,7 @@ var BarcodeDrawer = (function () {
   function drawWhiteBox(wide) {
     var width = 112;
     if (wide) {
-      width = 180;
+      width = 170;
     }
     drawBox(hpos - 10, vOffset - 15, width, 100, 'Paper');
   }
