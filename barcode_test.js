@@ -7,6 +7,7 @@ var tests = {
     this.barcode_strings = [];
     this.barcode_strings.push('978-1-906230-16-6\n');
     this.barcode_strings.push('978-0-7858-2744-3');
+    this.barcode_strings.push('978-1-907360-19-0');
     this.addon = '52495';
   },
 

@@ -69,6 +69,9 @@ var Barcode = function () {
         }
       }
       var checkDigit = 10 - (total % 10);
+      if (checkDigit === 10) {
+        checkDigit = 0;
+      }
       return (checkDigit === this.getCheckDigit());
     },
 
