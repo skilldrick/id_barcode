@@ -4,6 +4,7 @@
 
 var Barcode = function () {
   var barcode_string;
+  var addon_string;
   var stripped;
 
   function getNorm(bars) {
@@ -24,18 +25,29 @@ var Barcode = function () {
     return norm;
   }
 
+  function strip(str) {
+    return str.replace(/[^\d]+/g, '');
+  }
+
   return {
-    init: function (str) {
-      barcode_string = str;
-      stripped = this.strip();
-      if ( !this.checkCheckDigit() ) {
-        throw "Check digit incorrect";
+    init: function (isbnStr, addonStr) {
+      if (isbnStr) {
+        barcode_string = isbnStr;
+        stripped = strip(barcode_string);
+        if ( !this.checkCheckDigit() ) {
+          throw "Check digit incorrect";
+        }
       }
+
+      if (addonStr) {
+        addon_string = strip(addonStr);
+      }
+
       return this;
     },
 
-    strip: function () {
-      return barcode_string.replace(/[^\d]+/g, '');
+    getStripped: function () {
+      return stripped;
     },
 
     getCheckDigit: function () {
@@ -89,6 +101,64 @@ var Barcode = function () {
       }
       return normalisedWidths;
 
+    },
+
+    getAddonWidths: function () {
+      if (! addon_string) {
+        return false;
+      }
+      else {
+        var checksum = this.getAddonChecksum();
+        var pattern = addon_pattern[checksum];
+        var widths = [];
+        for (var i = 0; i < addon_string.length; i++) {
+          //separators:
+          if (i === 0) {
+            widths.push([0, 1, 0, 1, 1]);
+          }
+          else {
+            widths.push([0, 1]);
+          }
+          var encoding = pattern[i];
+          widths.push(bar_widths[encoding][addon_string[i]]);
+        }
+        return widths;
+      }
+    },
+
+    getNormalisedAddon: function () {
+      var addonWidths = this.getAddonWidths();
+      var normalisedAddon = [];
+      var current = [];
+      for (var i = 0; i < addonWidths.length; i++) {
+        current = [];
+        if (addonWidths[i].length == 2) {
+          current.push([0, 1])
+        }
+        else {
+          current.push([0, 1, 0, 1]);
+        }
+        current.push(getNorm(addonWidths[i]));
+        if (i % 2 == 1) {
+          current.push(addon_string[Math.floor(i / 2)]);
+        }
+        normalisedAddon.push(current);
+      }
+
+      return normalisedAddon;
+    },
+
+    getAddonChecksum: function () {
+      var total = 0;
+      for (var i = 0; i < addon_string.length; i++) {
+        if (i % 2 === 0) {
+          total += addon_string[i] * 3;
+        }
+        else {
+          total += addon_string[i] * 9;
+        }
+      }
+      return total % 10;
     }
 
   }
@@ -101,6 +171,19 @@ var Barcode = function () {
 */
 
 var pattern = ['L', 'G', 'G', 'L', 'G', 'L', 'R', 'R', 'R', 'R', 'R', 'R'];
+
+var addon_pattern = [
+  ['G', 'G', 'L', 'L', 'L'],
+  ['G', 'L', 'G', 'L', 'L'],
+  ['G', 'L', 'L', 'G', 'L'],
+  ['G', 'L', 'L', 'L', 'G'],
+  ['L', 'G', 'G', 'L', 'L'],
+  ['L', 'L', 'G', 'G', 'L'],
+  ['L', 'L', 'L', 'G', 'G'],
+  ['L', 'G', 'L', 'G', 'L'],
+  ['L', 'G', 'L', 'L', 'G'],
+  ['L', 'L', 'G', 'L', 'G']
+];
 
 var bar_widths = {
   L: [

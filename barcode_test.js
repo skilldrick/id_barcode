@@ -7,6 +7,7 @@ var tests = {
     this.barcode_strings = [];
     this.barcode_strings.push('978-1-906230-16-6\n');
     this.barcode_strings.push('978-0-7858-2744-3');
+    this.addon = '52495';
   },
 
   'test logger': function () {
@@ -14,7 +15,7 @@ var tests = {
   },
 
   'test strip barcode': function () {
-    var stripped = Barcode().init(this.barcode_strings[0]).strip();
+    var stripped = Barcode().init(this.barcode_strings[0]).getStripped();
     assert('Barcode should match', stripped === '9781906230166');
   },
 
@@ -69,6 +70,52 @@ var tests = {
       
     var actualNormalisedWidths = Barcode().init(this.barcode_strings[0]).getNormalisedWidths();
     assert_equal(correctNormalisedWidths, actualNormalisedWidths);
+  },
+
+  'test no addon': function () {
+    var addon = Barcode().init(this.barcode_strings[0]).getAddonWidths();
+    assert_equal(false, addon);
+  },
+
+  'test addon checksum': function () {
+    var checksum = Barcode().init('', this.addon).getAddonChecksum();
+    assert_equal(1, checksum);
+  },
+
+  'test addon widths': function () {
+    var correctWidths = [
+      [0, 1, 0, 1, 1],
+      [0, 1, 1, 1, 0, 0, 1],
+      [0, 1],
+      [0, 0, 1, 0, 0, 1, 1],
+      [0, 1],
+      [0, 0, 1, 1, 1, 0, 1],
+      [0, 1],
+      [0, 0, 0, 1, 0, 1, 1],
+      [0, 1],
+      [0, 1, 1, 0, 0, 0, 1]
+    ];
+
+    var actualWidths = Barcode().init('', this.addon).getAddonWidths();
+    assert_equal(correctWidths, actualWidths);
+  },
+
+  'test addon normalised': function () {
+    var normalisedAddon = [
+      [[0, 1, 0, 1], [1, 1, 1, 2]],
+      [[0, 1, 0, 1], [1, 3, 2, 1], 5],
+      [[0, 1], [1, 1]],
+      [[0, 1, 0, 1], [2, 1, 2, 2], 2],
+      [[0, 1], [1, 1]],
+      [[0, 1, 0, 1], [2, 3, 1, 1], 4],
+      [[0, 1], [1, 1]],
+      [[0, 1, 0, 1], [3, 1, 1, 2], 9],
+      [[0, 1], [1, 1]],
+      [[0, 1, 0, 1], [1, 2, 3, 1], 5]
+    ];
+
+    var actualNormalised = Barcode().init('', this.addon).getNormalisedAddon();
+    assert_equal(normalisedAddon, actualNormalised);
   }
 
 }
