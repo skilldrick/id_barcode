@@ -128,6 +128,9 @@ var Barcode = function () {
 
     getNormalisedAddon: function () {
       var addonWidths = this.getAddonWidths();
+      if (! addonWidths) {
+        return false;
+      }
       var normalisedAddon = [];
       var current = [];
       for (var i = 0; i < addonWidths.length; i++) {

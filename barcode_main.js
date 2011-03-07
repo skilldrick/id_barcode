@@ -14,7 +14,12 @@ function showDialog() {
   var edittext = input.add('edittext');
   edittext.characters = 20;
   edittext.active = true;
-  //edittext.text = '978-1-906230-16-6';
+  //edittext.text = '978-1-907360-21-3'; //just for testing
+
+  input.add('statictext', undefined, 'Addon (optional):');
+  var addonText = input.add('edittext');
+  addonText.characters = 10;
+  //addonText.text = '50995'; //just for testing
 
   dialog.add('statictext', undefined, 'ISBN font:');
   var isbnFontRow = dialog.add('group');
@@ -31,6 +36,7 @@ function showDialog() {
   if (dialog.show() === 1) {
     return {
       isbn: edittext.text,
+      addon: addonText.text,
       isbnFont: isbnFontSelect.getFont(),
       codeFont: codeFontSelect.getFont()
     }
@@ -45,8 +51,9 @@ var BarcodeDrawer = (function () {
   var page;
   var layer;
   var scale;
-  var height;
+  var normalHeight;
   var guardHeight;
+  var addonHeight;
   var reduce;
   var hpos;
   var vOffset;
@@ -80,12 +87,22 @@ var BarcodeDrawer = (function () {
     return doc;
   }
 
-  function drawBar(width) {
-    drawBox(hpos, vOffset, width - reduce, height);
+  function drawBar(width, height, y) {
+    if (! height) {
+      height = normalHeight;
+    }
+    if (! y) {
+      y = vOffset;
+    }
+    drawBox(hpos, y, width - reduce, height);
+  }
+
+  function drawAddonBar(width) {
+    drawBar(width, addonHeight, vOffset + (normalHeight - addonHeight));
   }
 
   function drawGuard() {
-    drawBox(hpos, vOffset, 1 - reduce, guardHeight);
+    drawBar(1, guardHeight);
   }
 
   function startGuards() {
@@ -138,6 +155,32 @@ var BarcodeDrawer = (function () {
     }
   }
 
+  function drawAddon(addonWidths, font) {
+    var pattern = null;
+    var widths = null;
+    var width = null;
+    var digit = null;
+
+    hpos += 10; //gap between barcode and addon
+    for (var i = 0; i < addonWidths.length; i++) {
+      pattern = addonWidths[i][0];
+      widths = addonWidths[i][1];
+      digit = addonWidths[i][2]; //may be undefined
+
+      if (digit) {
+        drawChar(hpos, digit, font);
+      }
+
+      for (var j = 0; j < widths.length; j++) {
+        width = widths[j];
+        if (pattern[j] === 1) {
+          drawAddonBar(width);
+        }
+        hpos += width;
+      }
+    }
+  }
+
   function drawText(x, y, boxWidth, boxHeight, text, font, align) {
     var fontSize = 12; //this is just a starting point
     x *= scale;
@@ -161,20 +204,25 @@ var BarcodeDrawer = (function () {
   }
 
   function drawChar(x, character, font) {
-    var y = vOffset + height + 1;
+    var y = vOffset + normalHeight + 2;
     var boxWidth = 7;
     var boxHeight = 9;
     drawText(x, y, boxWidth, boxHeight, character, font, Justification.LEFT_ALIGN);
   }
 
-  function drawWhiteBox() {
-    drawBox(hpos - 10, vOffset - 15, 112, 100, 'Paper');
+  function drawWhiteBox(wide) {
+    var width = 112;
+    if (wide) {
+      width = 180;
+    }
+    drawBox(hpos - 10, vOffset - 15, width, 100, 'Paper');
   }
 
   function init() {
     scale = 0.3;
-    height = 70;
+    normalHeight = 70;
     guardHeight = 75;
+    addonHeight = 60;
     reduce = 0.3;
     hpos = 50;
     vOffset = 50;
@@ -191,14 +239,17 @@ var BarcodeDrawer = (function () {
     layer = doc.layers.item('barcode');
   }
 
-  function drawBarcode(barWidths, spec) {
+  function drawBarcode(barWidths, addonWidths, spec) {
     init();
-    drawWhiteBox();
+    drawWhiteBox(!!addonWidths);
     drawText(hpos, vOffset - 10, 98, 9,
       "ISBN: " + spec.isbn, spec.isbnFont, Justification.LEFT_ALIGN);
     startGuards();
     drawMain(barWidths, spec.codeFont);
     endGuards();
+    if (addonWidths) {
+      drawAddon(addonWidths, spec.codeFont);
+    }
     page.groups.add(layer.allPageItems);
   }
 
@@ -210,7 +261,9 @@ var BarcodeDrawer = (function () {
 
 var result = showDialog();
 if (result) {
-  var barWidths = Barcode().init(result.isbn).getNormalisedWidths();
-  BarcodeDrawer.drawBarcode(barWidths, result);
+  var barcode = Barcode().init(result.isbn, result.addon);
+  var barWidths = barcode.getNormalisedWidths();
+  var addonWidths = barcode.getNormalisedAddon();
+  BarcodeDrawer.drawBarcode(barWidths, addonWidths, result);
 }
 
